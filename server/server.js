@@ -1,5 +1,7 @@
 const express = require("express");
 require("dotenv").config(); // To access the environment variables
+const path = require("path");
+const cors = require("cors");
 
 const connectDB = require("./config/dbconfig");
 const userRouter = require("./routes/userRoute");
@@ -9,6 +11,19 @@ const showRouter = require("./routes/showRoute");
 const bookingRouter = require("./routes/bookingRoute");
 
 const app = express();
+
+const clientBuildPath = path.join(__dirname, "../client/build");
+console.log(clientBuildPath);
+
+app.use(express.static(clientBuildPath)); // 8081 -> localhost:8081 -> index,html
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 app.use("/api/bookings/verify", express.raw({ type: "application/json" }));
 app.use(express.json());
 connectDB();
@@ -19,6 +34,10 @@ app.use("/api/movies", movieRouter);
 app.use("/api/theatres", theatreRouter);
 app.use("/api/shows", showRouter);
 app.use("/api/bookings", bookingRouter);
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(clientBuildPath, "index.html"));
+});
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
